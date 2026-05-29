@@ -1,0 +1,953 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教育技术学班 - 专业素质考评成绩查询系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #c41e3a 0%, #e53935 50%, #ff6b6b 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 背景纹理 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        /* 主容器 - 左右布局 */
+        .main-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 左侧查询区域 */
+        .container {
+            background: linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%);
+            border-radius: 20px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255,255,255,0.2) inset;
+            padding: 45px;
+            width: 550px;
+            flex-shrink: 0;
+            position: relative;
+            border: 3px solid rgba(255,215,0,0.3);
+        }
+
+        /* 右侧 JVS 框架 */
+        .jvs-panel {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+            overflow: hidden;
+            flex: 1;
+            min-width: 600px;
+            border: 3px solid rgba(255,215,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .jvs-header {
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .jvs-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .jvs-header a {
+            color: #ffd700;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 6px 15px;
+            background: rgba(255,215,0,0.2);
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+
+        .jvs-header a:hover {
+            background: rgba(255,215,0,0.3);
+        }
+
+        .jvs-frame {
+            flex: 1;
+            border: none;
+            width: 100%;
+            min-height: 600px;
+        }
+
+        /* 顶部装饰条 */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #c41e3a, #ffd700, #c41e3a);
+            border-radius: 17px 17px 0 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #e53935;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .school-badge {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(196,30,58,0.4);
+            border: 3px solid #ffd700;
+        }
+
+        .school-badge span {
+            color: #ffd700;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .header h1 {
+            color: #c41e3a;
+            font-size: 26px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .header .subtitle {
+            color: #8b0000;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+
+        .class-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #c41e3a, #e53935);
+            color: white;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+            box-shadow: 0 3px 10px rgba(196,30,58,0.3);
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #c41e3a;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0c0c0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: #fff;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #c41e3a;
+            box-shadow: 0 0 0 3px rgba(196,30,58,0.15);
+        }
+
+        .form-group input::placeholder {
+            color: #aaa;
+        }
+
+        .file-upload {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 35px;
+            border: 2px dashed #e0c0c0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #fff9f9 0%, #fff 100%);
+        }
+
+        .file-upload:hover {
+            border-color: #c41e3a;
+            background: linear-gradient(135deg, #fff0f0 0%, #fff 100%);
+            transform: translateY(-2px);
+        }
+
+        .file-upload input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-upload-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .file-upload-text {
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .file-name {
+            margin-top: 12px;
+            color: #c41e3a;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 20px rgba(196,30,58,0.35);
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 35px rgba(196,30,58,0.45);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-page {
+            display: none;
+        }
+
+        .result-page.active {
+            display: block;
+        }
+
+        .login-page.hidden {
+            display: none;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            color: #333;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(135deg, #e8e8e8 0%, #d0d0d0 100%);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .page-title {
+            text-align: center;
+            color: #c41e3a;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e53935;
+        }
+
+        .student-info {
+            background: linear-gradient(135deg, #fff9f9 0%, #fff 100%);
+            border: 2px solid #e53935;
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 25px;
+        }
+
+        .student-info h3 {
+            color: #c41e3a;
+            margin-bottom: 18px;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .student-info h3::before {
+            content: '📋';
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed #e0c0c0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #c41e3a;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .score-card {
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            border-radius: 15px;
+            padding: 30px;
+            color: white;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(196,30,58,0.35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: translate(-30%, -30%); }
+            50% { transform: translate(30%, 30%); }
+        }
+
+        .score-title {
+            font-size: 15px;
+            opacity: 0.95;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .score-number {
+            font-size: 56px;
+            font-weight: 800;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .score-detail {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            border: 2px solid #e0c0c0;
+        }
+
+        .score-detail h3 {
+            color: #c41e3a;
+            margin-bottom: 18px;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .score-detail h3::before {
+            content: '📈';
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .score-item:last-child {
+            border-bottom: none;
+        }
+
+        .score-item-name {
+            color: #666;
+            font-size: 15px;
+        }
+
+        .score-item-value {
+            color: #c41e3a;
+            font-weight: 700;
+            font-size: 17px;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #ffebee 0%, #fff 100%);
+            border: 2px solid #ef5350;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #e8f5e9 0%, #fff 100%);
+            border: 2px solid #66bb6a;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .multiple-results {
+            margin-bottom: 20px;
+        }
+
+        .multiple-results h3 {
+            color: #c41e3a;
+            margin-bottom: 18px;
+            font-size: 17px;
+            text-align: center;
+        }
+
+        .result-option {
+            background: linear-gradient(135deg, #fff9f9 0%, #fff 100%);
+            border: 2px solid #e0c0c0;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .result-option:hover {
+            border-color: #c41e3a;
+            background: linear-gradient(135deg, #fff0f0 0%, #fff 100%);
+            transform: translateX(5px);
+        }
+
+        .result-option.selected {
+            border-color: #c41e3a;
+            background: linear-gradient(135deg, #ffe0e0 0%, #fff 100%);
+            box-shadow: 0 4px 15px rgba(196,30,58,0.2);
+        }
+
+        .result-option-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .result-option-name {
+            font-weight: 700;
+            color: #c41e3a;
+            font-size: 16px;
+        }
+
+        .result-option-score {
+            background: linear-gradient(135deg, #c41e3a, #8b0000);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .result-option-detail {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .confirm-btn {
+            margin-top: 18px;
+        }
+
+        .photo-preview {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: none;
+            border: 2px solid #e0c0c0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .photo-preview.show {
+            display: block;
+        }
+
+        .footer-deco {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px dashed #e0c0c0;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .rank-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #8b0000;
+            padding: 3px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 8px;
+        }
+
+        /* 移动端响应式 */
+        @media (max-width: 1200px) {
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .container {
+                width: 100%;
+                max-width: 550px;
+            }
+            
+            .jvs-panel {
+                width: 100%;
+                max-width: 800px;
+                min-width: auto;
+            }
+            
+            .jvs-frame {
+                min-height: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- 左侧查询区域 -->
+        <div class="container">
+            <!-- 登录页面 -->
+            <div class="login-page" id="loginPage">
+                <div class="header">
+                    <div class="logo-area">
+                        <div class="school-badge">
+                            <span>师</span>
+                        </div>
+                        <div>
+                            <h1>专业素质考评成绩查询</h1>
+                            <div class="subtitle">江西师范大学</div>
+                        </div>
+                    </div>
+                    <div class="class-badge">🎓 教育技术学班</div>
+                    <p>请输入您的信息进行查询</p>
+                </div>
+
+                <div id="messageArea"></div>
+
+                <form id="queryForm" onsubmit="return false;">
+                    <div class="form-group">
+                        <label for="name">姓名</label>
+                        <input type="text" id="name" name="name" placeholder="请输入您的姓名">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentId">学号（可选）</label>
+                        <div style="position:relative;"><input type="password" id="studentId" style="padding-right:50px;"><button type="button" onclick="toggleStudentId()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;">👁️</button></div> name="studentId" placeholder="请输入您的学号">
+                    </div>
+
+                    <div class="form-group">
+                        <label>学生证照片（可选）</label>
+                        <div class="file-upload" id="fileUpload">
+                            <input type="file" id="photo" name="photo" accept="image/*">
+                            <div class="file-upload-icon">📷</div>
+                            <div class="file-upload-text">点击上传学生证照片<br>支持 JPG、PNG 格式</div>
+                            <div class="file-name" id="fileName"></div>
+                            <img class="photo-preview" id="photoPreview" alt="预览">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn" onclick="queryScore()">🔍 查询成绩</button>
+                </form>
+
+                <div class="footer-deco">
+                    教育技术学班 · 专业素质考评系统
+                </div>
+            </div>
+
+            <!-- 结果页面 -->
+            <div class="result-page" id="resultPage">
+                <button class="btn back-btn" onclick="showLoginPage()">← 返回重新查询</button>
+
+                <h2 class="page-title">成绩查询结果</h2>
+
+                <div class="student-info">
+                    <h3>学生信息</h3>
+                    <div class="info-row">
+                        <span class="info-label">姓名</span>
+                        <span class="info-value" id="resultName"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">学号</span>
+                        <span class="info-value" id="resultStudentId"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">班级</span>
+                        <span class="info-value">教育技术学班</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">总排名</span>
+                        <span class="info-value" id="resultIndex"></span>
+                    </div>
+                </div>
+
+                <div class="score-card">
+                    <div class="score-title">综合成绩</div>
+                    <div class="score-number" id="totalScore">0</div>
+                </div>
+
+                <div class="score-detail">
+                    <h3>成绩明细</h3>
+                    <div class="score-item">
+                        <span class="score-item-name">大一上学期</span>
+                        <span class="score-item-value" id="score1">0</span>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-item-name">大一下学期</span>
+                        <span class="score-item-value" id="score2">0</span>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-item-name">专业成绩</span>
+                        <span class="score-item-value" id="score3">0</span>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-item-name">综测成绩</span>
+                        <span class="score-item-value" id="score4">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 多结果选择页面 -->
+            <div class="result-page" id="selectPage">
+                <button class="btn back-btn" onclick="showLoginPage()">← 返回重新查询</button>
+
+                <h2 class="page-title">选择查询结果</h2>
+
+                <div class="multiple-results" id="multipleResults">
+                    <h3>⚠️ 找到多位同名同学，请选择：</h3>
+                    <div id="optionsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧 JVS 面板 -->
+        <div class="jvs-panel">
+            <div class="jvs-header">
+                <h2>
+                    <span>🏛️</span>
+                    江西师范大学
+                </h2>
+                <a href="https://www.jxnu.edu.cn" target="_blank">访问官网 →</a>
+            </div>
+            <img src="截图_1779808533983.png" alt="江西师范大学" style="width:100%;height:100%;object-fit:contain;border:none;">
+        </div>
+    </div>
+
+    <script>
+        // 成绩数据（69 条记录）
+        const examData = [
+    {"总排名":"1","姓名":"钟嘉雯","大一上":84.125,"大一下":88.375,"专业成绩":51.75,"综测成绩":28.4,"综合成绩":80.15},
+    {"总排名":"2","姓名":"蒋雨欣","大一上":85.958333,"大一下":87.961539,"专业成绩":52.1759626,"综测成绩":26.76,"综合成绩":78.9359626},
+    {"总排名":"3","姓名":"周煜琅","大一上":80.708333,"大一下":72.807692,"专业成绩":45.9948075,"综测成绩":32.45,"综合成绩":78.4448075},
+    {"总排名":"4","姓名":"王静蕊","大一上":85,"大一下":85.25,"专业成绩":51.075,"综测成绩":27.1,"综合成绩":78.175},
+    {"总排名":"5","姓名":"樊佳琪","大一上":85.541667,"大一下":87.807692,"专业成绩":52.0068078,"综测成绩":25.9175,"综合成绩":77.9243078},
+    {"总排名":"6","姓名":"向启萌","大一上":84.125,"大一下":85.333333,"专业成绩":50.8375,"综测成绩":26.7125,"综合成绩":77.55},
+    {"总排名":"7","姓名":"周欣怡","大一上":82.458333,"大一下":88.538461,"专业成绩":51.30993816,"综测成绩":26.2,"综合成绩":77.50993816},
+    {"总排名":"8","姓名":"邱添馨","大一上":84.583333,"大一下":87.541667,"专业成绩":51.6375,"综测成绩":25.87,"综合成绩":77.5075},
+    {"总排名":"9","姓名":"赖蓉","大一上":84.541667,"大一下":87.923077,"专业成绩":51.7394232,"综测成绩":25.3,"综合成绩":77.0394232},
+    {"总排名":"10","姓名":"刘小璐","大一上":84.625,"大一下":78.416667,"专业成绩":48.9125001,"综测成绩":27.9,"综合成绩":76.8125001},
+    {"总排名":"11","姓名":"李颖","大一上":81.833333,"大一下":83.730769,"专业成绩":49.6704306,"综测成绩":26.95,"综合成绩":76.6204306},
+    {"总排名":"12","姓名":"袁翠仁","大一上":85.333333,"大一下":84.166667,"专业成绩":50.85,"综测成绩":25.325,"综合成绩":76.175},
+    {"总排名":"13","姓名":"邓斯敏","大一上":83.375,"大一下":82.083333,"专业成绩":49.6375,"综测成绩":26.52,"综合成绩":76.1575},
+    {"总排名":"14","姓名":"秦玥","大一上":81.5,"大一下":78.36,"专业成绩":47.958,"综测成绩":27.675,"综合成绩":75.633},
+    {"总排名":"15","姓名":"张海川","大一上":81.083333,"大一下":78.769231,"专业成绩":47.9557692,"综测成绩":27.4375,"综合成绩":75.3932692},
+    {"总排名":"16","姓名":"尧臣刚","大一上":83.041667,"大一下":82.75,"专业成绩":50.1375,"综测成绩":24.925,"综合成绩":75.0625},
+    {"总排名":"17","姓名":"骆欣怡","大一上":82.875,"大一下":79.423077,"专业成绩":48.6894232,"综测成绩":26.35,"综合成绩":75.0394232},
+    {"总排名":"18","姓名":"曾海丰","大一上":83.625,"大一下":80.153846,"专业成绩":49.1336538,"综测成绩":25.4625,"综合成绩":74.5961538},
+    {"总排名":"19","姓名":"魏亨九","大一上":81.875,"大一下":80,"专业成绩":48.5625,"综测成绩":25.8875,"综合成绩":74.45},
+    {"总排名":"20","姓名":"黄艳珑","大一上":78.625,"大一下":86,"专业成绩":49.3875,"综测成绩":25.03,"综合成绩":74.4175},
+    {"总排名":"21","姓名":"胡瑞麟","大一上":84.375,"大一下":81.791667,"专业成绩":49.8500002,"综测成绩":24.55,"综合成绩":74.4000002},
+    {"总排名":"22","姓名":"汪子涵","大一上":81.458333,"大一下":79.333333,"专业成绩":48.2350008,"综测成绩":25.7,"综合成绩":73.9350008},
+    {"总排名":"23","姓名":"李曦冉","大一上":76.833333,"大一下":72.230769,"专业成绩":44.7192306,"综测成绩":29.2,"综合成绩":73.9192306},
+    {"总排名":"24","姓名":"刘越涛","大一上":83.208333,"大一下":78.5,"专业成绩":48.5125,"综测成绩":25.25,"综合成绩":73.7625},
+    {"总排名":"25","姓名":"梁雅婷","大一上":81.125,"大一下":86,"专业成绩":50.1375001,"综测成绩":23.56,"综合成绩":73.6975001},
+    {"总排名":"26","姓名":"郭敏敏","大一上":79.333333,"大一下":79.92,"专业成绩":47.7759998,"综测成绩":25.7625,"综合成绩":73.5384998},
+    {"总排名":"27","姓名":"邱静玉","大一上":83.75,"大一下":78.25,"专业成绩":48.6,"综测成绩":24.88,"综合成绩":73.48},
+    {"总排名":"28","姓名":"陈恺怡","大一上":81.625,"大一下":79.625,"专业成绩":48.375,"综测成绩":24.85,"综合成绩":73.225},
+    {"总排名":"29","姓名":"胡群","大一上":82.458333,"大一下":81.25,"专业成绩":49.1125,"综测成绩":24.04,"综合成绩":73.1525},
+    {"总排名":"30","姓名":"李玉","大一上":80.25,"大一下":75.88,"专业成绩":46.839,"综测成绩":25.9125,"综合成绩":72.7515},
+    {"总排名":"31","姓名":"陈钰琦","大一上":78.541667,"大一下":75.615385,"专业成绩":46.2471156,"综测成绩":26.45,"综合成绩":72.6971156},
+    {"总排名":"32","姓名":"胡小雨","大一上":81.625,"大一下":79.6,"专业成绩":48.3675,"综测成绩":23.9975,"综合成绩":72.365},
+    {"总排名":"33","姓名":"潘彬","大一上":79.833333,"大一下":74.833333,"专业成绩":46.3999998,"综测成绩":25.8125,"综合成绩":72.2124998},
+    {"总排名":"34","姓名":"严钰如","大一上":80.833333,"大一下":81,"专业成绩":48.5599998,"综测成绩":23.5,"综合成绩":72.0599998},
+    {"总排名":"35","姓名":"刘晓蓉","大一上":78.208333,"大一下":77.333333,"专业成绩":46.6624998,"综测成绩":25.38,"综合成绩":72.0424998},
+    {"总排名":"36","姓名":"杨雅信","大一上":80.625,"大一下":78.259259,"专业成绩":47.6652777,"综测成绩":24.25,"综合成绩":71.9152777},
+    {"总排名":"37","姓名":"杨艺航","大一上":79.791667,"大一下":74.958333,"专业成绩":46.425,"综测成绩":25.25,"综合成绩":71.675},
+    {"总排名":"38","姓名":"楚旋旋","大一上":79.083333,"大一下":78.84,"专业成绩":47.3769998,"综测成绩":24.25,"综合成绩":71.6269998},
+    {"总排名":"39","姓名":"卢家兴","大一上":79.416667,"大一下":75,"专业成绩":46.325,"综测成绩":25,"综合成绩":71.325},
+    {"总排名":"40","姓名":"符芝毓","大一上":80.75,"大一下":78.25,"专业成绩":47.7,"综测成绩":23.62,"综合成绩":71.32},
+    {"总排名":"41","姓名":"宋伟灿","大一上":80.458333,"大一下":77.48,"专业成绩":47.3815998,"综测成绩":23.65,"综合成绩":71.0315998},
+    {"总排名":"42","姓名":"李顺","大一上":78.583333,"大一下":75.666667,"专业成绩":46.275,"综测成绩":24.35,"综合成绩":70.625},
+    {"总排名":"43","姓名":"赖李净","大一上":75.041667,"大一下":77.32,"专业成绩":46.9085001,"综测成绩":23.65,"综合成绩":70.5585001},
+    {"总排名":"44","姓名":"林欣怡","大一上":79.166667,"大一下":77.458333,"专业成绩":47.0475,"综测成绩":23.5,"综合成绩":70.5475},
+    {"总排名":"45","姓名":"刘心瑞","大一上":77.791667,"大一下":75.923077,"专业成绩":46.1144032,"综测成绩":24.35,"综合成绩":70.4644032},
+    {"总排名":"46","姓名":"王莉","大一上":79.833333,"大一下":73.25,"专业成绩":45.925,"综测成绩":24.535,"综合成绩":70.46},
+    {"总排名":"47","姓名":"陈婉茹","大一上":76.47619,"大一下":70.923077,"专业成绩":44.2197801,"综测成绩":25.725,"综合成绩":69.9447801},
+    {"总排名":"48","姓名":"林煌坪","大一上":76,"大一下":75.041667,"专业成绩":45.3125001,"综测成绩":24.4,"综合成绩":69.7125001},
+    {"总排名":"49","姓名":"蔡芸熙","大一上":89.136364,"大一下":55.17692308,"专业成绩":43.2939851,"综测成绩":26.35,"综合成绩":69.6439851},
+    {"总排名":"50","姓名":"石丹丹","大一上":76.583333,"大一下":72.56,"专业成绩":44.7439998,"综测成绩":24.85,"综合成绩":69.5939998},
+    {"总排名":"51","姓名":"晏兰","大一上":79.583333,"大一下":73,"专业成绩":45.775,"综测成绩":23.8,"综合成绩":69.575},
+    {"总排名":"52","姓名":"谢明亮","大一上":75.083333,"大一下":72.56,"专业成绩":44.2929998,"综测成绩":24.8,"综合成绩":69.0929998},
+    {"总排名":"53","姓名":"蔡承妍","大一上":76.25,"大一下":75.407474,"专业成绩":45.4972422,"综测成绩":23.5,"综合成绩":68.9972422},
+    {"总排名":"54","姓名":"张微微","大一上":77.583333,"大一下":71.769231,"专业成绩":44.8057692,"综测成绩":24.1,"综合成绩":68.9057692},
+    {"总排名":"55","姓名":"程少帆","大一上":76.833333,"大一下":72.0125,"专业成绩":44.6537498,"综测成绩":24.25,"综合成绩":68.9037498},
+    {"总排名":"56","姓名":"林念","大一上":72.041667,"大一下":74.269231,"专业成绩":43.8932694,"综测成绩":25,"综合成绩":68.8932694},
+    {"总排名":"57","姓名":"吴振慧","大一上":76.333333,"大一下":72.092,"专业成绩":44.5275998,"综测成绩":24.25,"综合成绩":68.7775998},
+    {"总排名":"58","姓名":"任思璇","大一上":79.041667,"大一下":68.307692,"专业成绩":44.2048077,"综测成绩":24.4,"综合成绩":68.6048077},
+    {"总排名":"59","姓名":"张洪伟","大一上":73.166667,"大一下":69.153846,"专业成绩":42.6961539,"综测成绩":24.65,"综合成绩":67.3461539},
+    {"总排名":"60","姓名":"吴泉派","大一上":77.291667,"大一下":68.653846,"专业成绩":43.7836539,"综测成绩":23.5,"综合成绩":67.2836539},
+    {"总排名":"61","姓名":"窦立刚","大一上":76.541667,"大一下":69.04,"专业成绩":43.675,"综测成绩":23.5,"综合成绩":67.175},
+    {"总排名":"62","姓名":"王凯帆","大一上":76.541667,"大一下":71.846154,"专业成绩":44.5163463,"综测成绩":21.5875,"综合成绩":66.1038463},
+    {"总排名":"63","姓名":"马越","大一上":77.166667,"大一下":70.833333,"专业成绩":44.4,"综测成绩":21.55,"综合成绩":65.95},
+    {"总排名":"64","姓名":"陈佩文","大一上":76.166667,"大一下":64.583333,"专业成绩":42.225,"综测成绩":21.425,"综合成绩":63.65},
+    {"总排名":"65","姓名":"袁家兴","大一上":74.383333,"大一下":68.571429,"专业成绩":42.8864286,"综测成绩":20.5,"综合成绩":63.3864286},
+    {"总排名":"66","姓名":"陈孙宇","大一上":73.958333,"大一下":65.708333,"专业成绩":41.9,"综测成绩":20.6,"综合成绩":62.5},
+    {"总排名":"67","姓名":"汪鑫","大一上":73.958333,"大一下":65.625,"专业成绩":41.875,"综测成绩":20.5,"综合成绩":62.375},
+    {"总排名":"68","姓名":"考赛尔·斯迪克阿吉","大一上":66.625,"大一下":62.125,"专业成绩":38.625,"综测成绩":20.5,"综合成绩":59.125},
+    {"总排名":"69","姓名":"张成铭","大一上":65.833333,"大一下":56.333333,"专业成绩":36.6499998,"综测成绩":20.5,"综合成绩":57.1499998}
+];
+
+        let selectedStudent = null;
+
+        // 文件上传处理
+        const fileInput = document.getElementById('photo');
+        const fileName = document.getElementById('fileName');
+        const photoPreview = document.getElementById('photoPreview');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    fileName.textContent = file.name;
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        photoPreview.src = e.target.result;
+                        photoPreview.classList.add('show');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // 查询成绩
+        function queryScore() {
+            const name = document.getElementById('name').value.trim();
+            const studentId = document.getElementById('studentId').value.trim();
+
+            if (!name) {
+                showMessage('请输入姓名', 'error');
+                return;
+            }
+
+            const results = examData.filter(student => student.姓名 === name);
+
+            if (results.length === 0) {
+                showMessage(`未找到姓名为"${name}"的成绩记录，请检查姓名是否正确`, 'error');
+                return;
+            }
+
+            if (results.length === 1) {
+                selectedStudent = results[0];
+                showResult(selectedStudent, studentId);
+            } else {
+                showSelectPage(results, studentId);
+            }
+        }
+
+        function showMessage(text, type) {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = `<div class="${type === 'error' ? 'error-message' : 'success-message'}">${text}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+
+        function showLoginPage() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('resultPage').classList.remove('active');
+            document.getElementById('selectPage').classList.remove('active');
+            document.getElementById('messageArea').innerHTML = '';
+            document.getElementById('queryForm').reset();
+            fileName.textContent = '';
+            photoPreview.classList.remove('show');
+            selectedStudent = null;
+        }
+
+        function showSelectPage(results, studentId) {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('resultPage').classList.remove('active');
+            document.getElementById('selectPage').classList.add('active');
+
+            const optionsList = document.getElementById('optionsList');
+            optionsList.innerHTML = '';
+
+            results.forEach((student, index) => {
+                const option = document.createElement('div');
+                option.className = 'result-option';
+                option.onclick = () => selectStudent(student, studentId, option);
+                option.innerHTML = `
+                    <div class="result-option-header">
+                        <span class="result-option-name">${student.姓名} <span class="rank-badge">第${student.总排名}名</span></span>
+                        <span class="result-option-score">综合：${student.综合成绩.toFixed(2)}</span>
+                    </div>
+                    <div class="result-option-detail">
+                        大一上：${parseFloat(student.大一上).toFixed(2)} | 大一下：${parseFloat(student.大一下).toFixed(2)} | 专业：${parseFloat(student.专业成绩).toFixed(2)}
+                    </div>
+                `;
+                optionsList.appendChild(option);
+            });
+        }
+
+        function selectStudent(student, studentId, optionElement) {
+            document.querySelectorAll('.result-option').forEach(el => el.classList.remove('selected'));
+            optionElement.classList.add('selected');
+            selectedStudent = student;
+
+            const existingBtn = document.querySelector('.confirm-btn');
+            if (existingBtn) existingBtn.remove();
+
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = 'btn confirm-btn';
+            confirmBtn.textContent = '确认选择';
+            confirmBtn.onclick = () => showResult(student, studentId);
+
+            document.getElementById('optionsList').appendChild(confirmBtn);
+        }
+
+        function showResult(student, studentId) {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('selectPage').classList.remove('active');
+            document.getElementById('resultPage').classList.add('active');
+
+            document.getElementById('resultName').textContent = student.姓名;
+            document.getElementById('resultStudentId').textContent = studentId || '未填写';
+            document.getElementById('resultIndex').textContent = student.总排名;
+
+            document.getElementById('totalScore').textContent = parseFloat(student.综合成绩).toFixed(2);
+            document.getElementById('score1').textContent = parseFloat(student.大一上).toFixed(2);
+            document.getElementById('score2').textContent = parseFloat(student.大一下).toFixed(2);
+            document.getElementById('score3').textContent = parseFloat(student.专业成绩).toFixed(2);
+            document.getElementById('score4').textContent = parseFloat(student.综测成绩).toFixed(2);
+        }
+    function toggleStudentId() {
+        const input = document.getElementById('studentId');
+        const btn = document.querySelector('button[onclick="toggleStudentId()"]');
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.textContent = '🙈';
+        } else {
+            input.type = 'password';
+            btn.textContent = '👁️';
+        }
+    }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+

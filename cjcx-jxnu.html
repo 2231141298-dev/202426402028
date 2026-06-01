@@ -633,7 +633,10 @@
 
                     <div class="form-group">
                         <label for="studentId">学号（可选）</label>
-                        <div style="position:relative;"><input type="password" id="studentId" style="padding-right:50px;"><button type="button" onclick="toggleStudentId()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;">👁️</button></div> name="studentId" placeholder="请输入您的学号">
+                        <div style="position:relative;">
+                            <input type="password" id="studentId" name="studentId" placeholder="请输入您的学号" style="padding-right:50px;">
+                            <button type="button" onclick="toggleStudentId()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;">👁️</button>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -734,7 +737,9 @@
     </div>
 
     <script>
-        // 成绩数据（69 条记录）
+        const SCORE_API_BASE = localStorage.getItem('scoreApiBase') || 'http://localhost:5000';
+
+        // 成绩数据（69 条记录，后端未启动时作为备用查询数据）
         const examData = [
     {"总排名":"1","姓名":"钟嘉雯","大一上":84.125,"大一下":88.375,"专业成绩":51.75,"综测成绩":28.4,"综合成绩":80.15},
     {"总排名":"2","姓名":"蒋雨欣","大一上":85.958333,"大一下":87.961539,"专业成绩":52.1759626,"综测成绩":26.76,"综合成绩":78.9359626},
@@ -830,12 +835,54 @@
         }
 
         // 查询成绩
-        function queryScore() {
+        async function queryScore() {
             const name = document.getElementById('name').value.trim();
             const studentId = document.getElementById('studentId').value.trim();
+            const keyword = studentId || name;
+
+            if (!keyword) {
+                showMessage('请输入姓名或学号', 'error');
+                return;
+            }
+
+            const button = document.querySelector('.btn[onclick="queryScore()"]');
+            if (button) {
+                button.disabled = true;
+                button.textContent = '查询中...';
+            }
+
+            try {
+                const response = await fetch(`${SCORE_API_BASE}/api/scorequery/search?keyword=${encodeURIComponent(keyword)}`);
+                if (!response.ok) {
+                    throw new Error('后端暂未返回查询结果');
+                }
+
+                const payload = await response.json();
+                const results = (payload.data || []).map(mapApiStudent);
+
+                if (results.length === 0) {
+                    showMessage(`未找到"${keyword}"的成绩记录，请检查输入是否正确`, 'error');
+                    return;
+                }
+
+                if (results.length === 1) {
+                    selectedStudent = results[0];
+                    showResult(selectedStudent, selectedStudent.学号 || studentId);
+                } else {
+                    showSelectPage(results, studentId);
+                }
+                return;
+            } catch (error) {
+                console.warn('ScoreQueryDB API unavailable, fallback to local data:', error);
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = '🔍 查询成绩';
+                }
+            }
 
             if (!name) {
-                showMessage('请输入姓名', 'error');
+                showMessage('后端服务未启动时，请输入姓名使用本地备用数据查询', 'error');
                 return;
             }
 
@@ -852,6 +899,23 @@
             } else {
                 showSelectPage(results, studentId);
             }
+        }
+
+        function mapApiStudent(item) {
+            return {
+                总排名: item.Rank || '--',
+                学号: item.StudentID || '',
+                姓名: item.StudentName || '',
+                班级: item.ClassName || '教育技术学班',
+                性别: item.Gender || '',
+                考试类型: item.ExamType || '',
+                大一上: Number(item.Score1 || 0),
+                大一下: Number(item.Score2 || 0),
+                专业成绩: Number(item.MajorScore || 0),
+                综测成绩: Number(item.ObservationScore || 0),
+                综合成绩: Number(item.TotalScore || 0),
+                考试日期: item.ExamDate || ''
+            };
         }
 
         function showMessage(text, type) {
@@ -920,7 +984,7 @@
             document.getElementById('resultPage').classList.add('active');
 
             document.getElementById('resultName').textContent = student.姓名;
-            document.getElementById('resultStudentId').textContent = studentId || '未填写';
+            document.getElementById('resultStudentId').textContent = student.学号 || studentId || '未填写';
             document.getElementById('resultIndex').textContent = student.总排名;
 
             document.getElementById('totalScore').textContent = parseFloat(student.综合成绩).toFixed(2);

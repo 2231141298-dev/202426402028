@@ -1,0 +1,12 @@
+{
+  "name": "score-agent-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node local-server.js",
+    "start": "node local-server.js",
+    "vercel-dev": "vercel dev"
+  },
+  "dependencies": {}
+}
